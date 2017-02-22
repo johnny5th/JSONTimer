@@ -69,6 +69,24 @@ class JsonTimer {
 
   // Logs time to storage
   logTime(start, stop) {
+    var mysql      = require('mysql');
+    var connection = mysql.createConnection({
+      host     : 'localhost',
+      port     : '32781',
+      user     : 'test',
+      password : 'test',
+      database : 'test'
+    });
+
+    connection.connect();
+
+    connection.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
+      if (error) throw error;
+      console.log('The solution is: ', results[0].solution);
+    });
+
+    connection.en
+
     fs.readFile('log.json', 'utf8', (err, data) => {
       if(err) {
         console.log(err);
