@@ -1,15 +1,30 @@
 const moment = require('moment');
 const fs = require('fs');
+var redis = require("redis");
 
 class JsonTimer {
 
-  constructor(sockets) {
-    this.sockets = sockets;
+  constructor(key, callback) {
+    this.timerKey = key;
 
-    let timerJSON = JSON.parse(fs.readFileSync('timer.json', 'utf8'));
+    this.redis = redis.createClient({host: "localhost", port: 32768});
 
-    this.running = timerJSON.running;
-    this.startTime = timerJSON.startTime;
+    this.redis.on("error", function (err) {
+      console.log("Error " + err);
+    });
+
+    this.redis.get(this.timerKey, (err, reply) => {
+      let timerJSON;
+      if(reply == null) {
+        timerJSON = {"running":0,"startTime":""};
+      } else {
+        timerJSON = JSON.parse(reply);
+      }
+      this.running = timerJSON.running;
+      this.startTime = timerJSON.startTime;
+
+      return callback();
+    });
   }
 
   duration(start, stop) {
@@ -29,26 +44,26 @@ class JsonTimer {
   }
 
   // Starts timer
-  startTimer() {
+  startTimer(sockets) {
     if(this.running)
-      this.stopTimer();
+      this.stopTimer(null);
 
     this.running = 1;
     this.startTime = this.now();
-
-    this.sockets.emit('timerStarted', this.getTimer());
+    sockets.emit('timer', this.getTimer());
     this.saveTimer();
   }
 
   // Stops timer
-  stopTimer() {
+  stopTimer(sockets) {
     if(this.running)
       this.logTime(this.startTime, this.now());
 
     this.running = 0;
     this.startTime = "";
 
-    this.sockets.emit('timerStopped', this.getTimer());
+    if(sockets != null)
+      sockets.emit('timer', this.getTimer());
     this.saveTimer();
   }
 
@@ -76,11 +91,10 @@ class JsonTimer {
 
   // Saves timer object to persistent storage
   saveTimer() {
-    fs.writeFile('timer.json', JSON.stringify(this.getTimer()), (err) => {
-      if(err) {
-        return 'Error saving data';
-      }
-    });
+    this.redis.set(this.timerKey, JSON.stringify({
+      running: this.running,
+      startTime: this.startTime
+    }));
   }
 }
 

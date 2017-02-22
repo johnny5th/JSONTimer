@@ -4,39 +4,60 @@ const JsonTimer = require('./app/JsonTimer.js');
 
 let server = restify.createServer();
 let io = socketio.listen(server.server);
-let timer = new JsonTimer(io.sockets);
 
 // HTTP
-server.get('/timer', (req, res, next) => {
-  res.send(timer.getTimer());
+server.get('/timer/:key', (req, res, next) => {
+  let timer = new JsonTimer(req.params.key, function() {
+    res.send(timer.getTimer());
+  });
 });
 
-server.post('/timer/start', (req, res, next) => {
-  timer.startTimer();
-
-  res.send(timer.getTimer());
+server.post('/timer/:key/start', (req, res, next) => {
+  let timer = new JsonTimer(req.params.key, function() {
+    timer.startTimer(io.in(req.params.key));
+    res.send(timer.getTimer());
+  });
 });
 
-server.post('/timer/stop', (req, res, next) => {
-  timer.stopTimer();
-
-  res.send(timer.getTimer());
+server.post('/timer/:key/stop', (req, res, next) => {
+  let timer = new JsonTimer(req.params.key, function() {
+    timer.stopTimer(io.in(req.params.key));
+    res.send(timer.getTimer());
+  });
 });
 
 // Sockets
 io.sockets.on('connection', function (socket) {
-  socket.emit('timer', timer.getTimer());
+  let timerKey;
+
+  socket.on('authenticate', function(key) {
+    timerKey = key;
+    let timer = new JsonTimer(timerKey, function() {
+      if(timerKey in socket.rooms) {
+        socket.emit('message', "You are already authenticated with this key.");
+      } else {
+        socket.join(timerKey);
+        socket.emit('timer', timer.getTimer());
+      }
+    });
+  });
 
   socket.on('startTimer', function () {
-    timer.startTimer();
+    let timer = new JsonTimer(timerKey, function() {
+      timer.startTimer(io.in(key));
+    });
   });
 
   socket.on('stopTimer', function () {
-    timer.stopTimer();
+    let timer = new JsonTimer(timerKey, function() {
+      timer.stopTimer(io.in(key));
+    });
   });
 
   socket.on('getTimer', function() {
-    socket.emit('timer', timer.getTimer());
+    let timer = new JsonTimer(timerKey, function() {
+      socket.emit('timer', timer.getTimer());
+    });
   });
 });
 
