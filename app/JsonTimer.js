@@ -1,17 +1,11 @@
 const moment = require('moment');
-const fs = require('fs');
-var redis = require("redis");
 
 class JsonTimer {
 
-  constructor(key, callback) {
-    this.timerKey = key;
-
-    this.redis = redis.createClient({host: "localhost", port: 32768});
-
-    this.redis.on("error", function (err) {
-      console.log("Error " + err);
-    });
+  constructor(timerKey, redis, mysql, callback) {
+    this.timerKey = timerKey;
+    this.redis = redis;
+    this.mysql = mysql;
 
     this.redis.get(this.timerKey, (err, reply) => {
       let timerJSON;
@@ -55,9 +49,9 @@ class JsonTimer {
   }
 
   // Stops timer
-  stopTimer(sockets) {
+  stopTimer(sockets, description) {
     if(this.running)
-      this.logTime(this.startTime, this.now());
+      this.logTime(this.startTime, this.now(), description);
 
     this.running = 0;
     this.startTime = "";
@@ -68,38 +62,10 @@ class JsonTimer {
   }
 
   // Logs time to storage
-  logTime(start, stop) {
-    var mysql      = require('mysql');
-    var connection = mysql.createConnection({
-      host     : 'localhost',
-      port     : '32781',
-      user     : 'test',
-      password : 'test',
-      database : 'test'
-    });
-
-    connection.connect();
-
-    connection.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
+  logTime(start, stop, description) {
+    let log = {timerKey: this.timerKey, start: moment(start).format('YYYY-MM-DD HH:mm:ss'), stop: moment(stop).format('YYYY-MM-DD HH:mm:ss'), description: description};
+    this.mysql.query('INSERT INTO log SET ?', log, function (error) {
       if (error) throw error;
-      console.log('The solution is: ', results[0].solution);
-    });
-
-    connection.en
-
-    fs.readFile('log.json', 'utf8', (err, data) => {
-      if(err) {
-        console.log(err);
-      } else {
-        let logData = JSON.parse(data);
-        logData.logs.push({start: start, stop: stop, duration: this.duration(start, stop)});
-        let json = JSON.stringify(logData, null, 2);
-        fs.writeFile('log.json', json, 'utf8', (err) => {
-          if(err) {
-            console.log(err);
-          }
-        });
-      }
     });
   }
 
