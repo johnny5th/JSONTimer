@@ -64,7 +64,7 @@ class JsonTimer {
   // Logs time to storage
   logTime(start, stop, description) {
     let log = {timerKey: this.timerKey, start: moment(start).format('YYYY-MM-DD HH:mm:ss'), stop: moment(stop).format('YYYY-MM-DD HH:mm:ss'), description: description};
-    this.mysql.query('INSERT INTO log SET ?', log, function (error) {
+    this.mysql.query('INSERT INTO timerLog SET ?', log, function (error) {
       if (error) throw error;
     });
   }

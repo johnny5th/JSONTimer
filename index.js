@@ -1,3 +1,4 @@
+const config = require('./config');
 const restify = require('restify');
 const socketio = require('socket.io');
 const redis = require("redis");
@@ -7,17 +8,21 @@ const JsonTimer = require('./app/JsonTimer.js');
 let server = restify.createServer();
 let io = socketio.listen(server.server);
 
-let redisDB = redis.createClient({host: "localhost", port: 32771});
+let redisDB = redis.createClient({
+  host   : config.redis_host,
+  port   : config.redis_port,
+  prefix : config.redis_prefix
+});
 redisDB.on("error", function (err) {
   console.log("Redis Error " + err);
 });
 
 let mysqlDB = mysql.createConnection({
-  host     : 'localhost',
-  port     : '32770',
-  user     : 'test',
-  password : 'test',
-  database : 'test'
+  host     : config.mysql_host,
+  port     : config.mysql_port,
+  user     : config.mysql_user,
+  password : config.mysql_password,
+  database : config.mysql_database
 });
 mysqlDB.connect();
 
@@ -102,9 +107,9 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
-  socket.on('stopTimer', function () {
+  socket.on('stopTimer', function (description) {
     let timer = new JsonTimer(timerKey, redisDB, mysqlDB, function() {
-      timer.stopTimer(io.in(timerKey));
+      timer.stopTimer(io.in(timerKey), description);
     });
   });
 
