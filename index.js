@@ -3,7 +3,7 @@ const restify = require('restify');
 const socketio = require('socket.io');
 const redis = require("redis");
 const mysql = require('mysql');
-const JsonTimer = require('./app/JsonTimer.js');
+const JsonTimer = require('./app/JSONTimer/JSONTimer.js');
 
 let server = restify.createServer();
 let io = socketio.listen(server.server);
@@ -120,6 +120,6 @@ io.sockets.on('connection', function (socket) {
   });
 });
 
-server.listen(8080, function() {
+server.listen(config.api_port, function() {
   console.log('%s listening at %s', server.name, server.url);
 });
