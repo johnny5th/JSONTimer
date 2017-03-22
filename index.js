@@ -9,22 +9,22 @@ let server = restify.createServer();
 let io = socketio.listen(server.server);
 
 let redisDB = redis.createClient({
-  host   : config.redis_host,
-  port   : config.redis_port,
-  prefix : config.redis_prefix
+  host: config.redis_host,
+  port: config.redis_port,
+  prefix: config.redis_prefix
 });
 redisDB.on("error", function (err) {
   console.log("Redis Error " + err);
 });
 
-let mysqlDB = mysql.createConnection({
-  host     : config.mysql_host,
-  port     : config.mysql_port,
-  user     : config.mysql_user,
-  password : config.mysql_password,
-  database : config.mysql_database
+let mysqlDB = mysql.createPool({
+  connectionLimit: 10,
+  host: config.mysql_host,
+  port: config.mysql_port,
+  user: config.mysql_user,
+  password: config.mysql_password,
+  database: config.mysql_database
 });
-mysqlDB.connect();
 
 server.use(restify.bodyParser({mapParams: true}));
 
