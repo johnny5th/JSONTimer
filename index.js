@@ -3,7 +3,8 @@ const restify = require('restify');
 const socketio = require('socket.io');
 const redis = require("redis");
 const mysql = require('mysql');
-const JsonTimer = require('./app/JSONTimer/JSONTimer.js');
+const JsonTimer = require('./app/JSONTimer.js');
+const Account = require('./app/Account.js');
 
 let server = restify.createServer();
 let io = socketio.listen(server.server);
@@ -83,6 +84,18 @@ server.post('/timer/:key/stop', (req, res, next) => {
   });
 
   return next();
+});
+
+server.post('/account/add/:email', (req, res, next) => {
+  let account = new Account(mysqlDB);
+
+  account.create(req.params.email, function(key) {
+    if(key == false) {
+      return next(new restify.UnauthorizedError('Not a valid email address.'));
+    }
+
+    res.send({key: key});
+  });
 });
 
 // Sockets
