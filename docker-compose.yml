@@ -10,6 +10,8 @@ services:
       MYSQL_DATABASE: jsontimer
       MYSQL_USER: jsontimer
       MYSQL_PASSWORD: jsontimer
+    ports:
+      - ${MYSQL_PORT}:3306
 
   pma:
     image: phpmyadmin/phpmyadmin
@@ -20,16 +22,4 @@ services:
       PHP_UPLOAD_MAX_FILESIZE: 1G
       PHP_MAX_INPUT_VARS: 1G
     ports:
-      - 8081:80
-
-  redis:
-    image: redis:alpine
-
-  node:
-    image: node:6
-    volumes:
-    - ./:/app
-    working_dir: /app
-    entrypoint: node index.js
-    ports:
-      - 8080:8080
+      - ${PHPMYADMIN_PORT}:80
