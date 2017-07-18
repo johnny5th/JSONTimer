@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const passport = require('passport');
 const socketio = require('socket.io');
+const UserRouter = require('./routes/User');
 const AuthRouter = require('./routes/Auth');
 const TimerRouter = require('./routes/Timer');
 
@@ -12,6 +13,7 @@ app.use(bodyParser.json());
 app.use(passport.initialize());
 require('./utils/passport');
 
+app.use('/api/user', UserRouter);
 app.use('/api/auth', AuthRouter);
 app.use('/api/timer', TimerRouter);
 

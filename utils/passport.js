@@ -1,20 +1,24 @@
 const config = require('../config/config');
 const passport = require('passport');
-const GitHubStrategy = require('passport-github').Strategy;
+const LocalStrategy = require('passport-local').Strategy;
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 const User = require('../app/User');
 
-passport.use(new GitHubStrategy(
+
+passport.use(new LocalStrategy(
   {
-    clientID: config.github_client_id,
-    clientSecret: config.github_client_secret,
-    callbackURL: 'http://127.0.0.1:8080/api/auth/github/callback',
-    scope: ['user:email'],
+    usernameField: 'email',
+    passwordField: 'password',
   },
-  function(accessToken, refreshToken, profile, cb) {
-    User.findOrCreate('github', { email: profile.emails[0].value, githubId: profile.id }, (err, user) => {
-      return cb(err, user);
+  function(email, password, cb) {
+    User.getByEmail(email, (err, user) => {
+      if (err) { return cb(err); }
+
+      user.verifyPassword(password, (valid) => {
+        if(valid) return cb(null, user);
+        else return cb('Not a valid password.', null);
+      });
     });
   }
 ));

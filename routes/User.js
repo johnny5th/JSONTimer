@@ -2,13 +2,13 @@ const config = require('../config/config');
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
+const User = require('../app/User');
 const jwt = require('jsonwebtoken');
 
-router.post('/',
-  function(req, res, next) {
-    // Authenticate
-    passport.authenticate('local', function(err, user) {
-      if(err) return res.status(403).send(err);
+router.post('/create',
+  function(req, res) {
+    User.create(req.body.email, req.body.password, (err, user) => {
+      if(err) return res.status(405).send(err);
 
       // Generate token
       let token = jwt.sign({
@@ -18,10 +18,10 @@ router.post('/',
       });
 
       res.json({
-        user: req.user,
+        user: user,
         token: token,
       });
-    })(req, res, next);
+    });
   }
 );
 
