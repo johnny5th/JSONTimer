@@ -1,12 +1,29 @@
+const config = require('../config/config');
 const isemail = require('isemail');
 const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
 let mysqlDB = require('../utils/mysql');
+const jwt = require('jsonwebtoken');
 
 class User {
 
   constructor() {
     this.id = null;
     this.email = null;
+  }
+
+  resetPassword(password, cb) {
+    if(password == '') return cb('Not a valid password.');
+
+    bcrypt.hash(password, 10, (err, hash) => {
+      if(err) return cb(err.code);
+
+      mysqlDB.query('UPDATE `users` SET `password` = ? WHERE `id` = ?', [hash, this.id], (error) => {
+        if (error) return cb(error);
+
+        return cb(null);
+      });
+    });
   }
 
   verifyPassword(password, cb) {
@@ -20,6 +37,41 @@ class User {
       }
 
       return cb(true);
+    });
+  }
+
+  static emailToken(email, cb) {
+    if(!isemail.validate(email)) return cb('Not a valid email.');
+
+    mysqlDB.query('SELECT id FROM `users` WHERE `email` = ?', [email], (error, results) => {
+      if (error) return cb(error);
+
+      if(results.length <= 0) return cb('Email Not Found.');
+
+      let mailer = nodemailer.createTransport(config.email_settings);
+
+      let token = jwt.sign({
+        id: results[0].id,
+      }, config.jwt_key, {
+        expiresIn: '30m',
+      });
+
+      let mailOptions = {
+        to: email,
+        subject: 'JSONTimer Login',
+        text: 'Click to Log in: https://jsontimer.com/resetpassword?token=' + token, // plain text body
+        html: '<p><a href="https://jsontimer.com/resetpassword?token=' + token + '">Click to Reset Password</a></p>', // html body
+      };
+
+      mailOptions.from = config.email_settings.from;
+
+      mailer.sendMail(mailOptions, (err) => {
+        if(err) {
+          return cb(err);
+        }
+
+        return cb();
+      });
     });
   }
 
@@ -42,6 +94,7 @@ class User {
 
   static create(email, password, cb) {
     if(!isemail.validate(email)) return cb('Not a valid email.', null);
+    if(password == '') return cb('Not a valid password.', null);
 
     bcrypt.hash(password, 10, (err, hash) => {
       if(err) return cb(err.code);

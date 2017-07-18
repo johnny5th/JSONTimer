@@ -16,7 +16,7 @@ router.param('apiKey', (req, res, next) => {
 router.get('/:apiKey?', (req, res, next) => {
   if(typeof req.params.apiKey == 'undefined') {
     // Authenticate to get list
-    return passport.authenticate('jwt', { session: false}, (err, user, info) => {
+    return passport.authenticate('jwt', { session: false}, (err, user) => {
       if (err) return res.status(405).send(err);
       if (!user) return res.status(405).send('Must provide user auth token.');
 
@@ -36,7 +36,7 @@ router.post('/', (req, res, next) => {
   let name = req.body.name ? req.body.name : '';
 
   // Authenticate to get list
-  return passport.authenticate('jwt', { session: false}, (err, user, info) => {
+  return passport.authenticate('jwt', { session: false}, (err, user) => {
     if (err) return res.status(405).send(err);
     if (!user) return res.status(405).send('Must provide user auth token.');
 

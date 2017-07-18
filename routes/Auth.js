@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 router.post('/',
   function(req, res, next) {
     // Authenticate
-    passport.authenticate('local', function(err, user) {
+    passport.authenticate('local', { session: false}, function(err, user) {
       if(err) return res.status(403).send(err);
 
       // Generate token
@@ -18,7 +18,6 @@ router.post('/',
       });
 
       res.json({
-        user: req.user,
         token: token,
       });
     })(req, res, next);
