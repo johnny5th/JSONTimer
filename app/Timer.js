@@ -27,7 +27,7 @@ class Timer {
       this.name = results[0].name;
       this.apiKey = apiKey;
       this.running = !!results[0].running;
-      this.startTime = moment(results[0].startTime);
+      this.startTime = this.running ? moment.utc(results[0].startTime) : null;
       this.uid = results[0].uid;
 
       return cb();
@@ -48,7 +48,7 @@ class Timer {
         timer.name = row.name;
         timer.apiKey = row.apiKey;
         timer.running = !!row.running;
-        timer.startTime = moment(row.startTime);
+        timer.startTime = timer.running ? moment.utc(row.startTime) : null;
         timer.uid = uid;
         timers.push(timer);
       }
@@ -81,7 +81,7 @@ class Timer {
       apiKey: this.apiKey,
       running: this.running,
       startTime: this.startTime,
-      duration: Timer._duration(this.startTime, Timer._now()),
+      duration: this.running ? Timer._duration(this.startTime, Timer._now()) : null,
     };
   }
 
@@ -111,20 +111,20 @@ class Timer {
 
   // Logs time to storage
   log(startTime, stopTime, description) {
-    mysqlDB.query('INSERT INTO `log` SET `tid` = ?, `startTime` = ?, `stopTime` = ?, `description` = ?', [this.id, moment(startTime).format('YYYY-MM-DD HH:mm:ss'), moment(stopTime).format('YYYY-MM-DD HH:mm:ss'), description], (error) => {
+    mysqlDB.query('INSERT INTO `log` SET `tid` = ?, `startTime` = ?, `stopTime` = ?, `description` = ?', [this.id, moment.utc(startTime).format('YYYY-MM-DD HH:mm:ss.SSS'), moment.utc(stopTime).format('YYYY-MM-DD HH:mm:ss.SSS'), description], (error) => {
       if (error) throw error;
     });
   }
 
   // Saves timer object to persistent storage
   save() {
-    mysqlDB.query('UPDATE `timers` SET `running` = ?, `startTime` = ? WHERE `id` = ?', [this.running, moment(this.startTime).format('YYYY-MM-DD HH:mm:ss'), this.id], (error) => {
+    mysqlDB.query('UPDATE `timers` SET `running` = ?, `startTime` = ? WHERE `id` = ?', [this.running, moment.utc(this.startTime).format('YYYY-MM-DD HH:mm:ss.SSS'), this.id], (error) => {
       if (error) throw error;
     });
   }
 
   static _now() {
-    return moment();
+    return moment.utc();
   }
 
   static _generateKey(cb) {
@@ -142,9 +142,6 @@ class Timer {
   }
 
   static _duration(startTime, stopTime) {
-    startTime = moment(startTime);
-    stopTime = moment(stopTime);
-
     return moment.duration(stopTime.diff(startTime));
   }
 }

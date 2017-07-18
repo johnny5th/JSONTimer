@@ -3,39 +3,23 @@ const router = express.Router();
 const Timer = require('../app/Timer.js');
 const passport = require('passport');
 
-router.param('apiKey', (req, res, next) => {
-  // Check if apiKey exists
-  req.timer = new Timer();
-  req.timer.load(req.params.apiKey, (err) => {
-    if (err) res.status(405).send(err);
+router.route('/')
+.get((req, res, next) => {
+  // Authenticate to get list
+  return passport.authenticate('jwt', { session: false}, (err, user) => {
+    if (err) return res.status(405).send(err);
+    if (!user) return res.status(405).send('Must provide user auth token.');
 
-    next();
-  });
-});
-
-router.get('/:apiKey?', (req, res, next) => {
-  if(typeof req.params.apiKey == 'undefined') {
-    // Authenticate to get list
-    return passport.authenticate('jwt', { session: false}, (err, user) => {
-      if (err) return res.status(405).send(err);
-      if (!user) return res.status(405).send('Must provide user auth token.');
-
-      // Get list by user id
-      Timer.loadList(user.id, (err, list) => {
-        res.json(list.map((timer) => timer.get()));
-      });
-    })(req, res, next);
-  }
-
-  res.json(req.timer.get());
-
-  return next();
-});
-
-router.post('/', (req, res, next) => {
+    // Get list by user id
+    Timer.loadList(user.id, (err, list) => {
+      res.json(list.map((timer) => timer.get()));
+    });
+  })(req, res, next);
+})
+.post((req, res, next) => {
   let name = req.body.name ? req.body.name : '';
 
-  // Authenticate to get list
+  // Authenticate to create timer
   return passport.authenticate('jwt', { session: false}, (err, user) => {
     if (err) return res.status(405).send(err);
     if (!user) return res.status(405).send('Must provide user auth token.');
@@ -46,6 +30,23 @@ router.post('/', (req, res, next) => {
       res.json(timer.get());
     });
   })(req, res, next);
+});
+
+router.param('apiKey', (req, res, next) => {
+  // Check if apiKey exists
+  req.timer = new Timer();
+  req.timer.load(req.params.apiKey, (err) => {
+    if (err) res.status(405).send(err);
+
+    next();
+  });
+});
+
+router.get('/:apiKey', (req, res, next) => {
+
+  res.json(req.timer.get());
+
+  return next();
 });
 
 router.post('/:apiKey/start', (req, res, next) => {

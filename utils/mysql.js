@@ -7,7 +7,8 @@ let mysqlDB = mysql.createPool({
   port: config.mysql_port,
   user: config.mysql_user,
   password: config.mysql_password,
-  database: config.mysql_database
+  database: config.mysql_database,
+  dateStrings: true,
 });
 
 module.exports = mysqlDB;
