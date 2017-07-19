@@ -5,7 +5,15 @@ module.exports = {
   mysql_user: 'jsontimer',
   mysql_password: 'jsontimer',
   mysql_database: 'jsontimer',
-  github_client_id: '',
-  github_client_secret: '',
   jwt_key: '',
+  email_settings: {
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // secure:true for port 465, secure:false for port 587
+    from: 'test@test.com',
+    auth: {
+      user: 'test@test.com',
+      pass: 'test',
+    },
+  },
 };
