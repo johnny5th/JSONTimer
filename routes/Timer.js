@@ -50,7 +50,8 @@ router.get('/:apiKey', (req, res, next) => {
 });
 
 router.post('/:apiKey/start', (req, res, next) => {
-  req.timer.start(req.app.get('socketClient').in(req.params.apiKey));
+  req.timer.start();
+  res.io.in(req.params.apiKey).emit('timer', req.timer.get());
   res.json(req.timer.get());
 
   return next();
@@ -61,7 +62,8 @@ router.post('/:apiKey/stop', (req, res, next) => {
     req.params.description = '';
   }
 
-  req.timer.stop(req.app.get('socketClient').in(req.params.apiKey), req.params.description);
+  req.timer.stop(req.params.description);
+  res.io.in(req.params.apiKey).emit('timer', req.timer.get());
   res.send(req.timer.get());
 
   return next();

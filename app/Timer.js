@@ -86,26 +86,22 @@ class Timer {
   }
 
   // Starts timer
-  start(sockets) {
+  start() {
     if(this.running)
       this.stop(null);
 
     this.running = true;
     this.startTime = Timer._now();
-    sockets.emit('timer', this.get());
     this.save();
   }
 
   // Stops timer
-  stop(sockets, description) {
+  stop(description) {
     if(this.running)
       this.log(this.startTime, Timer._now(), description);
 
     this.running = false;
     this.startTime = null;
-
-    if(sockets != null)
-      sockets.emit('timer', this.get());
     this.save();
   }
 
