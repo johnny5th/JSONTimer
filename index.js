@@ -1,5 +1,6 @@
 const config = require('./config/config');
 const express = require('express');
+const cors = require('cors');
 const http = require('http');
 const bodyParser = require('body-parser');
 const passport = require('passport');
@@ -12,6 +13,7 @@ let app = express();
 let server = http.Server(app);
 
 app.use(bodyParser.json());
+app.use(cors());
 
 // Sockets
 let io = socketio.listen(server);
