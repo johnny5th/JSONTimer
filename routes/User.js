@@ -7,7 +7,10 @@ const jwt = require('jsonwebtoken');
 
 router.post('/create',
   function(req, res) {
-    User.create(req.body.email, req.body.password, (err, user) => {
+    let email = req.body.email ? req.body.email : '';
+    let password = req.body.password ? req.body.password : '';
+
+    User.create(email, password, (err, user) => {
       if(err) return res.status(405).send(err);
 
       // Generate token
