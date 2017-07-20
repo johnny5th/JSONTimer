@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // Sockets
-let io = socketio.listen(server, {path: '/api'});
+let io = socketio.listen(server, {path: '/api/socket'});
 require('./routes/Sockets')(io);
 app.use(function(req, res, next) {
   res.io = io;
