@@ -96,19 +96,35 @@ class Timer {
   }
 
   // Stops timer
-  stop(description) {
-    if(this.running)
-      this.log(this.startTime, Timer._now(), description);
+  stop(description, cb) {
+    if(this.running) {
+      let stopTime = Timer._now();
 
-    this.running = false;
-    this.startTime = null;
-    this.save();
+      this.log(this.startTime, stopTime, description, (error, id) => {
+        if(error) return cb(error, null);
+
+        cb(null, {
+          id: id,
+          startTime: this.startTime,
+          stopTime: stopTime,
+          description: description,
+        });
+      });
+
+      this.running = false;
+      this.startTime = null;
+      this.save();
+    } else {
+      cb(null, null);
+    }
   }
 
   // Logs time to storage
-  log(startTime, stopTime, description) {
-    mysqlDB.query('INSERT INTO `log` SET `tid` = ?, `startTime` = ?, `stopTime` = ?, `description` = ?', [this.id, moment.utc(startTime).format('YYYY-MM-DD HH:mm:ss.SSS'), moment.utc(stopTime).format('YYYY-MM-DD HH:mm:ss.SSS'), description], (error) => {
-      if (error) throw error;
+  log(startTime, stopTime, description, cb) {
+    mysqlDB.query('INSERT INTO `log` SET `tid` = ?, `startTime` = ?, `stopTime` = ?, `description` = ?', [this.id, moment.utc(startTime).format('YYYY-MM-DD HH:mm:ss.SSS'), moment.utc(stopTime).format('YYYY-MM-DD HH:mm:ss.SSS'), description], (error, result) => {
+      if (error) return cb(error, null);
+
+      return cb(null, result.insertId);
     });
   }
 
@@ -141,6 +157,51 @@ class Timer {
         }
 
         return cb();
+      });
+    });
+  }
+
+  getLogs(offset, limit, page, orderBy, cb) {
+    //cb(err, logs, totalPages);
+
+    offset = offset + limit*page;
+
+    if(orderBy != 'ASC' && orderBy != 'DESC')
+      orderBy = 'ASC';
+
+    mysqlDB.getConnection((error, conn) => {
+      if (error) {
+        conn.release();
+        return cb(error, null, null, null);
+      }
+
+      conn.query('SELECT SQL_CALC_FOUND_ROWS `id`, `startTime`, `stopTime`, `description` FROM `log` WHERE tid = ? ORDER BY `log`.`startTime` ' + orderBy + ' LIMIT ? OFFSET ? ', [this.id, limit, offset], (error, results) => {
+        if (error) {
+          conn.release();
+          return cb(error, null, null, null);
+        }
+
+        let logs = results.map((log) => {
+          return {
+            id: log.id,
+            startTime: log.startTime,
+            stopTime: log.stopTime,
+            description: log.description,
+          };
+        });
+
+        conn.query('SELECT FOUND_ROWS() as count', (error, result) => {
+          if (error) {
+            conn.release();
+            return cb(error, null, null, null);
+          }
+
+          let totalPages = Math.ceil(result[0].count / limit);
+
+          cb(null, logs, totalPages);
+
+          conn.release();
+        });
       });
     });
   }

@@ -98,11 +98,36 @@ router.post('/:apiKey/stop', (req, res, next) => {
     req.params.description = '';
   }
 
-  req.timer.stop(req.params.description);
-  res.io.in(req.params.apiKey).emit('timer', req.timer.get());
-  res.send(req.timer.get());
+  req.timer.stop(req.params.description, (err, log) => {
+    if (err) return res.status(405).send(err);
 
-  return next();
+    res.io.in(req.params.apiKey).emit('timer', req.timer.get());
+    res.json(log);
+
+    return next();
+  });
+});
+
+router.get('/:apiKey/log', (req, res, next) => {
+  let offset = req.query.offset ? parseInt(req.query.offset) : 0;
+  let limit = req.query.limit ? parseInt(req.query.limit) : 20;
+  let page = req.query.page ? parseInt(req.query.page) : 0;
+  let sortBy = req.query.sortBy ? req.query.sortBy : 'ASC';
+
+  if(limit > 1000) {
+    return res.status(405).send('Cannot have a limit higher than 1000');
+  }
+
+  req.timer.getLogs(offset, limit, page, sortBy, (err, logs, totalPages) => {
+    if (err) return res.status(405).send(err);
+
+    res.json({
+      logs: logs,
+      totalPages: totalPages,
+    });
+
+    return next();
+  });
 });
 
 module.exports = router;
