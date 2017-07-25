@@ -42,11 +42,47 @@ router.param('apiKey', (req, res, next) => {
   });
 });
 
-router.get('/:apiKey', (req, res, next) => {
+router.route('/:apiKey')
+.get((req, res, next) => {
 
   res.json(req.timer.get());
 
   return next();
+})
+.delete((req, res, next) => {
+
+  // Authenticate to delete timer
+  return passport.authenticate('jwt', { session: false}, (err, user) => {
+    if (err) return res.status(405).send(err);
+    if (!user) return res.status(405).send('Must provide user auth token.');
+
+    req.timer.delete((err) => {
+      if(err) {
+        res.status(400).send(err);
+        return;
+      }
+
+      res.status(200).send('OK.');
+    });
+  })(req, res, next);
+})
+.patch((req, res, next) => {
+  let name = req.body.name ? req.body.name : '';
+
+  // Authenticate to delete timer
+  return passport.authenticate('jwt', { session: false}, (err, user) => {
+    if (err) return res.status(405).send(err);
+    if (!user) return res.status(405).send('Must provide user auth token.');
+
+    req.timer.edit(name, (err) => {
+      if(err) {
+        res.status(400).send(err);
+        return;
+      }
+
+      res.json(req.timer.get());
+    });
+  })(req, res, next);
 });
 
 router.post('/:apiKey/start', (req, res, next) => {

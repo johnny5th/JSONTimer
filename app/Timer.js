@@ -119,6 +119,32 @@ class Timer {
     });
   }
 
+  edit(name, cb) {
+    mysqlDB.query('UPDATE `timers` SET `name` = ? WHERE `id` = ?', [name, this.id], (error) => {
+      if (error) return cb(error);
+
+      this.name = name;
+
+      return cb();
+    });
+  }
+
+  delete(cb) {
+    mysqlDB.query('DELETE FROM `timers` WHERE `id` = ?', [this.id], (error) => {
+      if (error) {
+        return cb(error);
+      }
+
+      mysqlDB.query('DELETE FROM `log` WHERE `tid` = ?', [this.id], (error) => {
+        if (error) {
+          return cb(error);
+        }
+
+        return cb();
+      });
+    });
+  }
+
   static _now() {
     return moment.utc();
   }
