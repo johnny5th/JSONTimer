@@ -60,7 +60,7 @@ class Timer {
   static create(uid, name, cb) {
     Timer._generateKey(apiKey => {
       mysqlDB.query('INSERT INTO `timers` SET `name` = ?, `apiKey` = ?, `uid` = ?', [name, apiKey, uid], (error, result) => {
-        if (error) return cb(error, null);
+        if (error) {console.log(error); return cb(error, null);}
 
         let timer = new Timer();
 
@@ -130,7 +130,11 @@ class Timer {
 
   // Saves timer object to persistent storage
   save() {
-    mysqlDB.query('UPDATE `timers` SET `running` = ?, `startTime` = ? WHERE `id` = ?', [this.running, moment.utc(this.startTime).format('YYYY-MM-DD HH:mm:ss.SSS'), this.id], (error) => {
+    let startTime = null;
+    if(this.startTime != null) {
+      startTime = moment.utc(this.startTime).format('YYYY-MM-DD HH:mm:ss.SSS')
+    }
+    mysqlDB.query('UPDATE `timers` SET `running` = ?, `startTime` = ? WHERE `id` = ?', [this.running, startTime, this.id], (error) => {
       if (error) throw error;
     });
   }

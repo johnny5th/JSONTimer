@@ -94,11 +94,10 @@ class User {
 
   static create(email, password, cb) {
     if(!isemail.validate(email)) return cb('Not a valid email.', null);
-    if(password == '') return cb('Not a valid password.', null);
+    if(password === '') return cb('Not a valid password.', null);
 
     bcrypt.hash(password, 10, (err, hash) => {
       if(err) return cb(err.code);
-
       mysqlDB.query('INSERT INTO `users` SET `email` = ?, `password` = ?', [email, hash], (error, result) => {
         if (error) return cb(error, null);
 
