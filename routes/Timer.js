@@ -18,12 +18,11 @@ router.route('/')
 })
 .post((req, res, next) => {
   let name = req.body.name ? req.body.name : '';
-
   // Authenticate to create timer
   return passport.authenticate('jwt', { session: false}, (err, user) => {
     if (err) return res.status(405).send(err);
     if (!user) return res.status(405).send('Must provide user auth token.');
-
+    console.log(user.id, name)
     Timer.create(user.id, name, (err, timer) => {
       if (err) return res.status(405).send(err);
 
