@@ -206,6 +206,24 @@ class Timer {
     });
   }
 
+  deleteLog(id, cb) {
+    mysqlDB.query('DELETE FROM `log` WHERE `id` = ?', [id], (error) => {
+      if (error) {
+        return cb(error);
+      }
+
+      return cb();
+    });
+  }
+
+  editLog(id, description, stopTime, cb) {
+    mysqlDB.query('UPDATE `log` SET `stopTime` = ?, `description` = ? WHERE `id` = ?', [moment.utc(stopTime).format('YYYY-MM-DD HH:mm:ss.SSS'), description, id], (error, result) => {
+      if (error) return cb(error, null);
+
+      return cb(null);
+    });
+  }
+
   static _now() {
     return moment.utc();
   }

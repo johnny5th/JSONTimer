@@ -57,10 +57,7 @@ router.route('/:apiKey')
     if (!user) return res.status(405).send('Must provide user auth token.');
 
     req.timer.delete((err) => {
-      if(err) {
-        res.status(400).send(err);
-        return;
-      }
+      if(err) return res.status(400).send(err);
 
       res.status(200).send('OK.');
     });
@@ -75,10 +72,7 @@ router.route('/:apiKey')
     if (!user) return res.status(405).send('Must provide user auth token.');
 
     req.timer.edit(name, (err) => {
-      if(err) {
-        res.status(400).send(err);
-        return;
-      }
+      if(err) return res.status(400).send(err);
 
       res.json(req.timer.get());
     });
@@ -127,6 +121,27 @@ router.get('/:apiKey/log', (req, res, next) => {
     });
 
     return next();
+  });
+});
+
+router.route('/:apiKey/log/:id')
+.delete((req, res, next) => {
+  req.timer.deleteLog(req.params.id, (err) => {
+    if(err) return res.status(400).send(err);
+
+    res.status(200).send('OK.');
+  });
+})
+.patch((req, res, next) => {
+  let description = req.body.description ? req.body.description : '';
+  let stopTime = req.body.stopTime;
+
+  if(!stopTime) return res.status(400).send('stopTime not sent');
+
+  req.timer.editLog(req.params.id, description, stopTime, (err) => {
+    if(err) return res.status(400).send(err);
+
+    res.status(200).send('OK.');
   });
 });
 

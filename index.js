@@ -16,7 +16,11 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // Sockets
-let io = socketio.listen(server, {path: '/api/socket'});
+let io = socketio.listen(server, {
+  path: '/api/socket',
+  pingInterval: 30000,
+  pingTimeout: 5000,
+});
 require('./routes/Sockets')(io);
 app.use(function(req, res, next) {
   res.io = io;
