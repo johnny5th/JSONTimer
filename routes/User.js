@@ -10,8 +10,8 @@ router.post('/create',
     console.log(req.get('content-type'));
     let email = req.body.email ? req.body.email : '';
     let password = req.body.password ? req.body.password : '';
+
     User.create(email, password, (err, user) => {
-      console.log(err);
       if(err) return res.status(405).send(err);
 
       // Generate token

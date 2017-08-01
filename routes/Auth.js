@@ -6,6 +6,9 @@ const jwt = require('jsonwebtoken');
 
 router.post('/',
   function(req, res, next) {
+    if(!req.body.email || !req.body.password) {
+      return res.status(403).send('Email and Password cannot be empty.');
+    }
     // Authenticate
     passport.authenticate('local', { session: false}, function(err, user) {
       if(err) return res.status(403).send(err);
