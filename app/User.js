@@ -40,6 +40,10 @@ class User {
     });
   }
 
+  loggedIn() {
+    mysqlDB.query('UPDATE `users` SET `loggedIn` = NOW() WHERE `id` = ?', [this.id]);
+  }
+
   static emailToken(email, cb) {
     if(!isemail.validate(email)) return cb('Not a valid email.');
 

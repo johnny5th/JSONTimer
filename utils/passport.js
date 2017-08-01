@@ -16,8 +16,10 @@ passport.use(new LocalStrategy(
       if (err) { return cb(err); }
 
       user.verifyPassword(password, (valid) => {
-        if(valid) return cb(null, user);
-        else return cb('Not a valid password.', null);
+        if(valid) {
+          user.loggedIn();
+          return cb(null, user);
+        } else return cb('Not a valid password.', null);
       });
     });
   }

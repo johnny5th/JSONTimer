@@ -7,7 +7,6 @@ const jwt = require('jsonwebtoken');
 
 router.post('/create',
   function(req, res) {
-    console.log(req.get('content-type'));
     let email = req.body.email ? req.body.email : '';
     let password = req.body.password ? req.body.password : '';
 
